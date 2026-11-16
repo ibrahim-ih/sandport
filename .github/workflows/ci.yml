@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - 'release/**'
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  metadata:
+    name: Validate branch and pull request title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch and title
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          if [[ "$BASE_REF" == "develop" && ! "$HEAD_REF" =~ ^feature/.+ ]]; then
+            echo "Pull requests into develop must come from feature/* branches."
+            exit 1
+          fi
+          if [[ "$BASE_REF" == release/* && ! "$HEAD_REF" =~ ^(feature|fix|release)/.+ ]]; then
+            echo "Unexpected source branch for a release pull request."
+            exit 1
+          fi
+          if [[ "$BASE_REF" == "main" && ! "$HEAD_REF" =~ ^(release|hotfix)/.+ ]]; then
+            echo "Pull requests into main must come from release/* or hotfix/* branches."
+            exit 1
+          fi
+          if [[ ! "$PR_TITLE" =~ ^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-zA-Z0-9._/-]+\))?!?:\ .+ ]]; then
+            echo "Pull request title must follow Conventional Commits."
+            exit 1
+          fi
+
+  quality:
+    name: Quality, tests, and browser builds
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - run: pnpm audit --audit-level=high

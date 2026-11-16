@@ -1,0 +1,41 @@
+{
+  "name": "sandport",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=26.12.1 <27"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit -p apps/extension/tsconfig.json && tsc --noEmit -p apps/extension/tsconfig.node.json",
+    "test": "vitest run --coverage --passWithNoTests",
+    "test:e2e": "playwright test",
+    "build": "pnpm --filter @sandport/extension build:chrome && pnpm --filter @sandport/extension build:firefox",
+    "release:prepare": "node scripts/release-prepare.mjs",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "20.1.0",
+    "@commitlint/config-conventional": "20.0.0",
+    "@eslint/js": "9.39.1",
+    "@playwright/test": "1.56.1",
+    "@preact/preset-vite": "2.10.6",
+    "@types/node": "26.0.0",
+    "@vitest/coverage-v8": "3.2.4",
+    "eslint": "9.39.1",
+    "git-cliff": "2.14.2",
+    "globals": "16.5.0",
+    "husky": "9.1.7",
+    "lint-staged": "16.2.6",
+    "prettier": "3.6.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.46.4",
+    "vitest": "3.2.4"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,json,md,yml,yaml,css}": "prettier --write",
+    "*.{js,jsx,ts,tsx}": "eslint --fix"
+  }
+}
